@@ -1,0 +1,193 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "private_outputs": true,
+      "authorship_tag": "ABX9TyMky2rKymmleLOINzxUZCes",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    },
+    "gpuClass": "standard"
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Y3na/Y3na/blob/main/Stock%20(CUAN)%20Price%20Predictionipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Stock (CUAN) Price Prediction"
+      ],
+      "metadata": {
+        "id": "SMsWomneq52S"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Import Library"
+      ],
+      "metadata": {
+        "id": "KwcZLK1yrKpd"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "2Ziymv449M7S"
+      },
+      "outputs": [],
+      "source": [
+        "import pandas as pd\n",
+        "import yfinance as yf\n",
+        "import datetime\n",
+        "from datetime import date, timedelta\n",
+        "today = date.today()"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Import Stock (CUAN) Data"
+      ],
+      "metadata": {
+        "id": "9p1fGOe3rU-P"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "d1 = today.strftime(\"%Y-%m-%d\")\n",
+        "end_date = d1\n",
+        "d2 = date.today() - timedelta(days=360)\n",
+        "d2 = d2.strftime(\"%Y-%m-%d\")\n",
+        "start_date = d2\n",
+        "\n",
+        "data = yf.download('CUAN.JK', \n",
+        "                      start=start_date, \n",
+        "                      end=end_date, \n",
+        "                      progress=False)\n",
+        "data[\"Date\"] = data.index\n",
+        "data = data[[\"Date\", \"Open\", \"High\", \"Low\", \"Close\", \n",
+        "             \"Adj Close\", \"Volume\"]]\n",
+        "data.reset_index(drop=True, inplace=True)\n",
+        "data.tail()"
+      ],
+      "metadata": {
+        "id": "XNjVu3NdB8Ay"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "data.shape"
+      ],
+      "metadata": {
+        "id": "COmSvIKhETK1"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Making Visualization Candlestick Chart"
+      ],
+      "metadata": {
+        "id": "768FEITcrjEW"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import plotly.graph_objects as go\n",
+        "figure = go.Figure(data=[go.Candlestick(x=data[\"Date\"],\n",
+        "                                        open=data[\"Open\"], \n",
+        "                                        high=data[\"High\"],\n",
+        "                                        low=data[\"Low\"], \n",
+        "                                        close=data[\"Close\"])])\n",
+        "figure.update_layout(title = \"CUAN Price Analysis\", \n",
+        "                     xaxis_rangeslider_visible=False) \n",
+        "figure.show()"
+      ],
+      "metadata": {
+        "id": "n_BQNqeiGcMT"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Correlation of All The Columns With The Close Column"
+      ],
+      "metadata": {
+        "id": "LK3hZ3Eet4PL"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "correlation = data.corr()\n",
+        "print(correlation[\"Close\"].sort_values(ascending=False))"
+      ],
+      "metadata": {
+        "id": "TLS-dIfMt-R7"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Predicting the Future Prices of CUAN with AutoTS"
+      ],
+      "metadata": {
+        "id": "Q5yWEXaluoZg"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from autots import AutoTS\n",
+        "model = AutoTS(forecast_length=5, min_allowed_train_percent = 0.5, frequency='infer', ensemble='simple')\n",
+        "model = model.fit(data, date_col='Date', value_col='Close', id_col=None)\n",
+        "prediction = model.predict()\n",
+        "forecast = prediction.forecast\n",
+        "print(forecast)"
+      ],
+      "metadata": {
+        "id": "pFjDct8r65GC"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "gc_gfPsI7CR7"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
